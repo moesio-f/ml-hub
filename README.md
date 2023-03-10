@@ -20,8 +20,9 @@ Iremos considerar que o aplicativo opera em uma zona "low trust", onde após a a
 - **API Gateway**: realiza autenticação de solicitações e realiza as solicitações aos respectivos serviços;
   - Esse componente realiza a checagem de permissões para o usuário autenticado;
   - Repassa as solicitações para os respectivos serviços;
-- **Serviço de Autenticação**: sistema simples com login e senha;
-  - Permite identificação dos usuários;
+- **IAM Gateway**: sistema simples com login e senha;
+  - Faz solicitações ao serviço de controle de usuário para obtenção de um JWT;
+  - Repassa as solicitações para os respectivos serviços;
 - **Serviço de Artefatos**: responsável acesso e controle dos artefatos (modelos, datasets).
   - API RESTful para comunicação;
   - Reúne os dados (CSVs e JSONs) armazenados pelo usuário;
