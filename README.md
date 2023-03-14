@@ -12,7 +12,7 @@ Iremos considerar que o aplicativo opera em uma zona "low trust", onde após a a
 
 ## Componentes
 
-- **Aplicativo cliente**: interface para acessar os recursos compartilhados;
+- **Aplicativo cliente** ([hub](hub)): interface para acessar os recursos compartilhados;
   - Interface gráfica;
   - Faz requisições a APIs dos outros serviços;
   - Módulo de login;
