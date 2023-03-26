@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ai.mlhub</groupId>
 	<artifactId>user_control</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>user_control</name>
 	<description>Módulo de controle de usuários do ML Hub.</description>
 	<properties>

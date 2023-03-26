@@ -4,16 +4,16 @@ INSERT IGNORE INTO
 permission (endpoint, description, name) 
 VALUES ("/user-control/list", 
         "Obtém uma lista de todos os usuários cadastrados no sistema.", 
-        "User Control: LIST"),
+        "user_control.list"),
         ("/user-control/get/",
         "Obtém informações de 1 usuário do sistema.",
-        "User Control: GET"),
+        "user_control.get"),
         ("/user-control/delete/",
         "Remove um usuário do sistema.",
-        "User Control: DELETE"),
+        "user_control.delete"),
         ("/user-control/create/",
         "Adiciona um usuário do sistema.",
-        "User Control: CREATE"),
+        "user_control.create"),
         ("/user-control/update/",
         "Atualiza informações de um usuário do sistema.",
-        "User Control: UPDATE");
+        "user_control.update");

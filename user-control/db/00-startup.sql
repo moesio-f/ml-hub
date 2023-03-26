@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS permission (
 CREATE TABLE IF NOT EXISTS has_permission (
     `username` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_general_ci,
     `endpoint` VARCHAR(256) CHARACTER SET utf8 COLLATE utf8_general_ci,
-    Foreign Key (`username`) REFERENCES user(`username`),
-    Foreign Key (`endpoint`) REFERENCES permission(`endpoint`)
+    Foreign Key (`username`) REFERENCES user(`username`) ON DELETE CASCADE ON UPDATE CASCADE,
+    Foreign Key (`endpoint`) REFERENCES permission(`endpoint`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

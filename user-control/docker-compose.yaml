@@ -10,7 +10,8 @@ services:
     depends_on:
       - mariadb
     ports:
-      - 5050:80
+      - 5050:8080
+    restart: always
 
   mariadb:
     image: mariadb:10.7.8
