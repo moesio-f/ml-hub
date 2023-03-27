@@ -14,4 +14,3 @@
 
 - https://jwt.io/introduction
 - https://developers.onelogin.com/authentication/tools/jwt
-- 

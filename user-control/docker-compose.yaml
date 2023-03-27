@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  api:
+  user-control-api:
     build: .
     image: ml-hub-user-control:latest
     environment:

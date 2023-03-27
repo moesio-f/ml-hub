@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  iam-api:
+    build: .
+    image: ml-hub-iam-gateway:latest
+    environment:
+      - USER_CONTROL_URL=http://host.docker.internal:5050/user-control
+    ports:
+      - 5051:8080
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+

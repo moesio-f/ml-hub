@@ -4,6 +4,15 @@
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Python
+venv/
+.venv/
+.env/
+__pycache__/
+dist/
+eggs/
+.eggs/
+
 ### STS ###
 .apt_generated
 .classpath
