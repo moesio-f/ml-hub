@@ -2,8 +2,7 @@
 
 > Esse módulo provê o serviço de gerenciamento de artefatos.
 > 
-> - O **MinIO** é utilizado para o armazenamento de dados semiestruturados e não estruturados.
-> - Os metadados são armazenados utilizando o **MySQL**.
+> - Os arquivos são armazenados no sistema de arquivos local.
+> - Os metadados são armazenados no sistema de arquivos local.
 > - A API é implementada utilizando a linguagem **Java 19**.
-
 

@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  artifacts-api:
+    build: .
+    image: ml-hub-artifacts:latest
+    ports:
+      - 5052:8080
+    restart: always
