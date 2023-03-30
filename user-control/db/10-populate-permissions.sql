@@ -61,4 +61,7 @@ VALUES ("/user-control/list",
         "training.list_active"),
         ("/training/inactive",
         "Lista todas as atividades de treinamento inativas.",
-        "training.list_inactive");
+        "training.list_inactive"),
+        ("/metrics/requests",
+        "Retorna a quantidade de solicitações a um dado endpoint.",
+        "metrics.requests");

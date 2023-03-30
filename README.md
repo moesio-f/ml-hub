@@ -20,19 +20,20 @@ Iremos considerar que o aplicativo opera em uma zona "low trust", onde após a a
 - **API Gateway**: realiza autenticação de solicitações e realiza as solicitações aos respectivos serviços;
   - Esse componente realiza a checagem de permissões para o usuário autenticado;
   - Repassa as solicitações para os respectivos serviços;
+  - Armazena métricas relacionadas com as solicitações;
 - **IAM Gateway**: sistema simples com login e senha;
   - Faz solicitações ao serviço de controle de usuário para obtenção de um JWT;
   - Repassa as solicitações para os respectivos serviços;
 - **Serviço de Artefatos**: responsável acesso e controle dos artefatos (modelos, datasets).
   - API RESTful para comunicação;
-  - Reúne os dados (CSVs e JSONs) armazenados pelo usuário;
+  - Reúne os dados (CSVs) armazenados pelo usuário;
   - Reúne os modelos (binários) armazenados pelo usuário;
   - Também armazena metadados (usuário que fez upload, tipo do artefato, data de upload, etc);
 - **Serviço de controle de usuários**
   - API RESTful para comunicação com o BD relacional;
   - Reúne todos os usuários do sistema;
   - Permite checagem de usuário-senha;
-  - Armazena meta-dados dos usuários (e.g., ID, data de criação);
+  - Armazena meta-dados dos usuários (e.g., tipo, data de criação);
 - **Serviço de Treinamento**
   - API RESTful para comunicação com o serviço;
   - Seleção da pipeline de treinamento (scikit-learn);
@@ -56,8 +57,8 @@ Iremos considerar que o aplicativo opera em uma zona "low trust", onde após a a
 ### Usuário
 
 - Registro de artefatos (modelos e datasets);
-- Treinamento de modelos de ML através de Script's Python;
-- Avaliação em batch para um dado modelo;
+- Treinamento de modelos de ML usando o scikit-learn;
+- ~~Avaliação em batch para um dado modelo;~~
 
 # Referências
 
