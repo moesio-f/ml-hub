@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  training-api:
+    build: .
+    image: ml-hub-training:latest
+    environment:
+      - CELERY_RESULT_BACKEND=rpc://
+      - CELERY_BROKER_URL=pyamqp://admin:adminpass@rabbitmq:5672//
+    ports:
+      - 5053:8080
+    depends_on:
+      - rabbitmq
+    command: gunicorn --log-level=debug -w 1 --threads 1 -b 0.0.0.0:8080 'api.app:app'
+
+  training-worker:
+    build: .
+    image: ml-hub-training:latest
+    environment:
+      - CELERY_RESULT_BACKEND=rpc://
+      - CELERY_BROKER_URL=pyamqp://admin:adminpass@rabbitmq:5672//
+      - C_FORCE_ROOT=1
+    depends_on:
+      - rabbitmq
+    command: python -m celery -A config.celery worker -Q training.queue --concurrency=1 --pool threads
+
+
+  rabbitmq:
+    image: rabbitmq:3.8.19-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=adminpass
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_HOST=rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+    restart: always

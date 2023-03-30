@@ -1,4 +1,8 @@
-# Módulo de Predições
+# ~~Módulo de Predições~~
+
+> **Esse módulo foi depreciado, o sistema atualmente já apresenta complexidade suficiente para o escopo da disciplina**.
+>
+> Por ora, esse módulo não será implementado. A adição de um novo módulo acarreta em maior complexidade do API Gateway bem como do módulo front-end, além de necessitar de mais recursos.
 
 > Esse módulo provê o serviço de predição de modelos.
 >

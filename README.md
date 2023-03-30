@@ -35,10 +35,10 @@ Iremos considerar que o aplicativo opera em uma zona "low trust", onde após a a
   - Armazena meta-dados dos usuários (e.g., ID, data de criação);
 - **Serviço de Treinamento**
   - API RESTful para comunicação com o serviço;
-  - Upload de código Python (versão, requisitos do pip);
-    - Padronizado: script com função X para treinamento;
+  - Seleção da pipeline de treinamento (scikit-learn);
   - Seleção do dataset que deve ser utilizado;
-- **Serviço de Predição**
+  - Salvamento e obtenção do modelo (possibilidade de salvar diretamente o artefato);
+- **~~Serviço de Predição~~** (suporte removido, complexidade atual do sistema já é suficiente)
   - API RESTful para comunicação com o serviço;
   - Selecionar um modelo;
   - Selecionar um dataset ou passar entradas manuais;
