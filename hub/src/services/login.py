@@ -1,5 +1,6 @@
 """Esse módulo provê funcionalidades de login.
 """
+import requests
 
 
 def authenticate(user: str, password: str) -> tuple[str, str]:
@@ -15,7 +16,18 @@ def authenticate(user: str, password: str) -> tuple[str, str]:
     Returns:
         str: token JWT que deve ser utilizado nas requisições.
     """
-    if not True:
-        raise ValueError("Usuário e senha não encontrados.")
+    response = requests.get('http://localhost:8080/iam/authenticate',
+                            json={
+                                'username': user,
+                                'password': password
+                            })
+
+    if response.status_code != 200:
+        raise ValueError()
     
-    return 'JWT', 'admin'
+    data = response.json()
+
+    if 'jwt' in data:
+        return data['jwt'], data['user_type']
+    else:
+        return ValueError()

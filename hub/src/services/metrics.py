@@ -1,15 +1,17 @@
 """Esse módulo provê funcionalidades 
 """
 
-import random
+import requests
 
-_SERVICES = {
+from . import _JWT, _URL
+
+_SERVICES = [
     'API Gateway',
     'IAM Gateway',
     'User Control',
     'Artifacts',
     'Training'
-}
+]
 
 
 def services_names():
@@ -17,7 +19,16 @@ def services_names():
 
 
 def get_metrics() -> dict:
+    response = requests.get(f'{_URL}/metrics',
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code == 200:
+        d = response.json()
+        return {k: d[k] for k in _SERVICES}
+
     return {k: {
-        'total_requests': random.randint(0, 500),
-        'requests_per_second': random.randint(0, 100)
+        'total_requests': 0,
+        'requests_per_second': 0
     } for k in _SERVICES}

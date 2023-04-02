@@ -47,7 +47,7 @@ def authenticate():
 
 @app.route('/iam/authorization')
 def authorization():
-    jwt_token = request.headers.get('JWT_TOKEN')
+    jwt_token = request.headers.get('Authorization').split(" ")[-1]
     data = request.get_json(force=True)
     username = data['username']
     user_type = data['user_type']

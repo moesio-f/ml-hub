@@ -11,7 +11,7 @@ if __name__ == '__main__':
     while True:
         jwt, u_type = gui.login.start()
         target = gui.admin if (u_type == 'admin') else gui.normal
-        services._JWT = jwt
+        services._JWT[0] = jwt
 
         try:
             target.start()
