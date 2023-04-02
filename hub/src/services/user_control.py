@@ -11,16 +11,16 @@ from . import _JWT, _URL
 _PERMISSIONS = [("/user-control/list",
                  "Obtém uma lista de todos os usuários cadastrados no sistema.",
                  "user_control.list"),
-                ("/user-control/get/",
+                ("/user-control/get",
                  "Obtém informações de 1 usuário do sistema.",
                  "user_control.get"),
-                ("/user-control/delete/",
+                ("/user-control/delete",
                  "Remove um usuário do sistema.",
                  "user_control.delete"),
-                ("/user-control/create/",
+                ("/user-control/create",
                  "Adiciona um usuário do sistema.",
                  "user_control.create"),
-                ("/user-control/update/",
+                ("/user-control/update",
                  "Atualiza informações de um usuário do sistema.",
                  "user_control.update"),
                 ("/artifacts/models",
@@ -67,10 +67,7 @@ _PERMISSIONS = [("/user-control/list",
                  "training.list_active"),
                 ("/training/inactive",
                  "Lista todas as atividades de treinamento inativas.",
-                 "training.list_inactive"),
-                ("/metrics/requests",
-                 "Retorna a quantidade de solicitações a um dado endpoint.",
-                 "metrics.requests")]
+                 "training.list_inactive")]
 
 
 def get_permissions():
@@ -109,7 +106,7 @@ def search_user(username: str) -> dict:
     permissions = data['permissions']
 
     for i in range(len(permissions)):
-        permissions[i] = [p[2] 
+        permissions[i] = [p[2]
                           for p in _PERMISSIONS
                           if p[0] == permissions[i]][0]
 
@@ -120,4 +117,47 @@ def create_user(username: str,
                 password: str,
                 is_admin: bool,
                 permissions: list[str]):
-    raise ValueError()
+    for i in range(len(permissions)):
+        permissions[i] = [p[0]
+                          for p in _PERMISSIONS
+                          if p[2] == permissions[i]][0]
+
+    response = requests.post(f'{_URL}/user-control/create',
+                             json={
+                                 'username': username,
+                                 'password': password,
+                                 'admin': is_admin,
+                                 'permissions': permissions
+                             },
+                             headers={
+                                 'Authorization': f'Bearer {_JWT[0]}'
+                             })
+
+    if response.status_code != 200:
+        if response.status_code == 400:
+            raise UserAlreadyExistsException()
+
+        raise ValueError()
+
+
+def update_user(username: str,
+                permissions: list[str]):
+    for i in range(len(permissions)):
+        permissions[i] = [p[0]
+                          for p in _PERMISSIONS
+                          if p[2] == permissions[i]][0]
+
+    response = requests.put(f'{_URL}/user-control/update',
+                            json={
+                                'username': username,
+                                'permissions': permissions
+                            },
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
+        if response.status_code == 400:
+            raise UserNotFoundException()
+
+        raise ValueError()

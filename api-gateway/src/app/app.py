@@ -47,7 +47,7 @@ def authenticate():
 def get_user():
     jwt = request.headers.get('Authorization').split(" ")[-1]
     data = request.get_json(force=True)
-    resp, code = _auth(jwt, endpoint='/user-control/get/')
+    resp, code = _auth(jwt, endpoint='/user-control/get')
 
     _METRICS['User Control']['total_requests'] += 1
     _METRICS['API Gateway']['total_requests'] += 1
@@ -55,6 +55,42 @@ def get_user():
 
     if _is_authorized(resp.get_json(), code):
         return user_control.get(data['username'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/user-control/create', methods=['POST'])
+def create_user():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/user-control/create')
+
+    _METRICS['User Control']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return user_control.create(username=data['username'],
+                                   password=data['password'],
+                                   user_type='admin' if data['admin'] else 'normal',
+                                   permissions=data['permissions'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/user-control/update', methods=['PUT'])
+def update_user():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/user-control/update')
+
+    _METRICS['User Control']['total_requests'] += 2
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return user_control.update(username=data['username'],
+                                   permissions=data['permissions'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
@@ -91,7 +127,6 @@ def _auth(jwt, endpoint):
 
 def _is_authorized(auth, status):
     app.logger.info(auth)
-    app.logger.info(status)
     if status != 200:
         return False
 

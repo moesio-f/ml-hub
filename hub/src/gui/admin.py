@@ -239,6 +239,9 @@ def update_user(username: str | None):
 
 
 def selected_permission_row(table_key, row, column):
+    if column != 1:
+        return
+    
     table = window[table_key]
     values = table.get()
 

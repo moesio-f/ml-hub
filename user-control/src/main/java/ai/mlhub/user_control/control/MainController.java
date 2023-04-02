@@ -127,17 +127,18 @@ public class MainController {
                 userRepo.save(u);
 
                 // Atualização nas permissões
-                List<String> extraPermissions = StreamSupport
+                List<String> currentPermissions = StreamSupport
                         .stream(hasPermissionRepo.getUserPermissions(username).spliterator(), false)
                         .map(hp -> hp.getEndpoint())
-                        .filter(e -> !updated.permissions.contains(e))
                         .collect(Collectors.toList());
 
-                for (String endpoint : extraPermissions) {
-                    HasPermission p = new HasPermission();
-                    p.setEndpoint(endpoint);
-                    p.setUsername(u.getUsername());
-                    hasPermissionRepo.save(p);
+                for (String endpoint : updated.permissions) {
+                    if (!currentPermissions.contains(endpoint)) {
+                        HasPermission p = new HasPermission();
+                        p.setEndpoint(endpoint);
+                        p.setUsername(u.getUsername());
+                        hasPermissionRepo.save(p);
+                    }
                 }
 
                 return ResponseEntity.ok().build();
