@@ -147,7 +147,7 @@ window = sg.Window('ML Hub',
 def update_metrics():
     table = window[_METRIC_TABLE]
     m = metrics.get_metrics()
-    values = [[k, v['total_requests'], v['requests_per_second']]
+    values = [[k, v['total_requests'], f"{v['requests_per_second']:.2f}"]
               for k, v in m.items()]
     table.update(values=values)
 

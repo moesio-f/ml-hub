@@ -23,6 +23,6 @@ def authorization(data: dict,
     response = requests.get(f'{_URL}/authorization',
                             json=data,
                             headers={
-                                'JWT_TOKEN': jwt,
+                                'Authorization': f'Bearer {jwt}',
                             })
     return jsonify(response.json()), response.status_code

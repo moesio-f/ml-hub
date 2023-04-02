@@ -1,7 +1,12 @@
 """Esse módulo provê funcionalidade de controle de usuários.
 """
 
-from exceptions import UserNotFoundException, UserAlreadyExistsException
+
+import requests
+
+from exceptions import UserAlreadyExistsException, UserNotFoundException
+
+from . import _JWT, _URL
 
 _PERMISSIONS = [("/user-control/list",
                  "Obtém uma lista de todos os usuários cadastrados no sistema.",
@@ -89,23 +94,26 @@ def search_user(username: str) -> dict:
         ]
     }
     """
-    if not True:
+    response = requests.get(f'{_URL}/user-control/get',
+                            json={
+                                'username': username
+                            },
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
         raise UserNotFoundException()
 
-    return {
-        "user": {
-            "username": "moesiof",
-            "password": "moesiof",
-            "registrationDate": "2023-01-01T00:00:00.000+00:00",
-            "type": "admin",
-            "name": "Moésio Filho",
-            "notes": ""
-        },
-        "permissions": [
-            "user_control.create",
-            "user_control.delete"
-        ]
-    }
+    data = response.json()
+    permissions = data['permissions']
+
+    for i in range(len(permissions)):
+        permissions[i] = [p[2] 
+                          for p in _PERMISSIONS
+                          if p[0] == permissions[i]][0]
+
+    return data
 
 
 def create_user(username: str,

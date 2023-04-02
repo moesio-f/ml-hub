@@ -11,6 +11,7 @@ from pathlib import Path
 import jwt as pyjwt
 
 import iam
+import user_control
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -37,22 +38,38 @@ def authenticate():
     })
 
     _METRICS['IAM Gateway']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
 
     return iam.authenticate(data)
+
+
+@app.route('/user-control/get')
+def get_user():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/user-control/get/')
+
+    _METRICS['User Control']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return user_control.get(data['username'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
 
 @app.route('/metrics/')
 def metrics():
     jwt = request.headers.get('Authorization').split(" ")[-1]
     user_type = pyjwt.decode(jwt, key=_KEY, algorithms=["HS256"])['user_type']
+    _METRICS['API Gateway']['total_requests'] += 1
 
     if user_type == 'admin':
         delta = time.time() - _START_TIME
-        _METRICS['API Gateway']['total_requests'] = sum(
-            [_METRICS[k]['total_requests'] for k in _METRICS if k != 'API Gateway'])
 
         for k in _METRICS:
-            v = int(_METRICS[k]['total_requests'] / delta)
+            v = _METRICS[k]['total_requests'] / delta
             _METRICS[k]['requests_per_second'] = v
 
         return jsonify(_METRICS), 200
@@ -60,3 +77,23 @@ def metrics():
     return jsonify({
         'msg': 'Usuário não autorizado.'
     }), 400
+
+
+def _auth(jwt, endpoint):
+    jwt_ = pyjwt.decode(jwt, key=_KEY, algorithms=["HS256"])
+    return iam.authorization({
+        'username': jwt_['user'],
+        'user_type': jwt_['user_type'],
+        'endpoint': endpoint
+    },
+        jwt)
+
+
+def _is_authorized(auth, status):
+    app.logger.info(auth)
+    app.logger.info(status)
+    if status != 200:
+        return False
+
+    k = 'permitted'
+    return k in auth and auth[k]
