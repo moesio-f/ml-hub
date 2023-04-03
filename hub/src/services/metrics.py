@@ -1,4 +1,5 @@
-"""Esse módulo provê funcionalidades 
+"""Esse módulo provê funcionalidades para
+métricas.
 """
 
 import requests

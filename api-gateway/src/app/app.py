@@ -1,14 +1,17 @@
 """Esse módulo contém a aplicação Flask.
 """
 
-import logging
-import time
 import json
+import logging
+import os
+import time
+from pathlib import Path
 
+import artifacts
 import iam
 import jwt as pyjwt
+import training
 import user_control
-import artifacts
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -251,6 +254,67 @@ def download_dataset():
 
     if _is_authorized(resp.get_json(), code):
         return artifacts.download_artifact(data['id'], 'dataset')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/training/train', methods=['POST'])
+def train():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/training/train')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['Training']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        models = {
+            "models": list(map(lambda d: d['class'],
+                               data['models'])),
+            "parameters": list(map(lambda d: d['parameters'],
+                               data['models']))
+        }
+
+        dataset_metadata = {
+            "features": data['dataset']['features_columns'],
+            "target": data['dataset']['target_column'],
+            "train_start": data['dataset']['train']['start'],
+            "train_end": data['dataset']['train']['end'],
+            "test_start": data['dataset']['test']['start'],
+            "test_end": data['dataset']['test']['end']
+        }
+
+        resp, code = artifacts.download_artifact(data['dataset_id'],
+                                                 'dataset')
+
+        if code != 200:
+            return jsonify({}), code
+        
+        temp_path = Path('/tmp/.ml_hub/api-gateway/')
+        temp_path.mkdir(parents=True, exist_ok=False)
+        temp_file = temp_path.joinpath('temp.zip')
+        with temp_file.open('wb') as f:
+            f.write(resp.data)
+
+        app.logger.info(resp.data)
+
+        unzip = os.system(f'unzip {str(temp_file)} -d {str(temp_path)}')
+
+        if unzip != 0:
+            os.system(f'rm -rf {str(temp_path)}')
+            return jsonify({}), 500
+
+        temp_file = list(temp_path.glob('*.csv'))[0]
+        dataset_csv = temp_file.read_bytes()
+        os.system(f'rm -rf {str(temp_path)}')
+
+        return training.train(dataset_csv=dataset_csv,
+                              models=models,
+                              dataset_metadata=dataset_metadata,
+                              model_type=data['model_type'],
+                              owner=data['username'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 

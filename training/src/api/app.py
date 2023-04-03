@@ -11,7 +11,7 @@ from flask import Flask, jsonify, request, Response
 from joblib import dump
 from werkzeug.utils import secure_filename
 
-from api.storage import TaskInfo, add_task, get_tasks, remove_task
+from api.storage import TaskResult, add_task, get_tasks
 from config.celery import app as celery_app
 
 app = Flask(__name__)
@@ -92,9 +92,13 @@ def train():
         },
         serializer='pickle')
 
+    app.logger.info(async_task)
+
     task_id = async_task.id
     task_status = async_task.status
-    add_task(task_id=task_id, started_by=username)
+    add_task(task_id=task_id,
+             started_by=username,
+             status=task_status)
 
     return jsonify({
         'task_id': task_id,
@@ -106,7 +110,7 @@ def train():
 @app.route('/training/status', methods=['GET'])
 def status():
     data = request.get_json(force=True)
-    tasks = get_tasks('all')
+    tasks = get_tasks()
     task_id = data['task_id']
 
     if task_id not in tasks:
@@ -117,31 +121,38 @@ def status():
     t = tasks[task_id]
     async_result = AsyncResult(id=task_id, app=celery_app)
     result = None
-    output = {
-        'task_id': t.id,
-        'start_time': t.start_time,
-        'owner': t.started_by,
-        'status': async_result.status
-    }
 
-    if async_result.status == 'SUCCESS':
+    if t.result is None and async_result.ready():
         try:
             result = async_result.get()
-            output.update({
-                'metrics': result['metrics'],
-                'pipeline_size': result['pipeline_size'],
-                'train_samples': result['train_size'],
-                'test_samples': result['test_size']
-            })
+            t.result = TaskResult(metrics=result['metrics'],
+                                  pipeline_size=result['pipeline_size'],
+                                  train_samples=result['train_size'],
+                                  test_samples=result['test_size'])
+            t.status = async_result.status
 
             model = result['model']
             root = Path(app.config['DOWNLOAD_FOLDER'],
                         f'{t.id}')
             root.mkdir(parents=True, exist_ok=True)
             dump(model, root.joinpath('model.joblib'))
-
-        except Exception as e:
+        except Exception:
             output.update({'msg': 'Resultado já foi obtido.'})
+
+    output = {
+        'task_id': t.id,
+        'start_time': t.start_time,
+        'owner': t.started_by,
+        'status': t.status
+    }
+
+    if t.result is not None:
+        output.update({
+            'metrics': t.result.metrics,
+            'pipeline_size': t.result.pipeline_size,
+            'train_samples': t.result.train_samples,
+            'test_samples': t.result.test_samples
+        })
 
     return jsonify(output)
 
@@ -149,7 +160,7 @@ def status():
 @app.route('/training/model', methods=['GET'])
 def model():
     data = request.get_json(force=True)
-    tasks = get_tasks('all')
+    tasks = get_tasks()
     task_id = data['task_id']
 
     if task_id not in tasks:
@@ -178,40 +189,10 @@ def model():
                     headers={'Content-Disposition': f'attachment;filename={t.id}.zip'})
 
 
-@app.route('/training/active', methods=['GET'])
+@app.route('/training/list', methods=['GET'])
 def active_tasks():
-    tasks = list(get_tasks('active').values())
-    active_tasks = []
-
-    for t in tasks:
-        async_result = AsyncResult(id=t.id, app=celery_app)
-
-        if async_result.status not in {'PENDING', 'STARTED', 'RETRY'}:
-            # Tarefa já foi concluída, podemos remover da lista de ativas
-            remove_task(t.id)
-        else:
-            active_tasks.append({
-                'task_id': t.id,
-                'start_time': t.start_time,
-                'owner': t.started_by,
-                'status': async_result.status
-            })
-
-    return jsonify(active_tasks)
-
-
-@app.route('/training/inactive', methods=['GET'])
-def inactive_tasks():
-    tasks = list(get_tasks('inactive').values())
-    inactive_tasks = []
-
-    for t in tasks:
-        async_result = AsyncResult(id=t.id, app=celery_app)
-        inactive_tasks.append({
-            'task_id': t.id,
-            'start_time': t.start_time,
-            'owner': t.started_by,
-            'status': async_result.status
-        })
-
-    return jsonify(inactive_tasks)
+    return jsonify([{
+        'task_id': t.id,
+        'start_time': t.start_time,
+        'owner': t.started_by
+    } for t in get_tasks().values()])

@@ -5,7 +5,7 @@ from pathlib import Path
 import PySimpleGUI as sg
 
 from exceptions import UserNotPermittedException
-from services import artifacts
+from services import artifacts, training
 
 _FONT = ('Noto Sans', 16, 'bold')
 _SMALL = ('Noto Sans', 10, 'bold')
@@ -93,7 +93,44 @@ layout_artifacts_upload = [[sg.VPush()],
                            [sg.VPush()]]
 
 # Aba treinamento (enviar requisição)
-layout_training = [[sg.VPush()]]
+_SEND_BTN = '-SEND-BTN-'
+_TRAINING_TYPE = '-TRAINING-TYPE'
+_AVAILABLE_DATASETS = '-AVAILABLE-DATASETS-'
+_TRAINING_CONFIG = '-TRAINING-CONFIG-'
+layout_training = [[sg.VPush()],
+                   [sg.Push(),
+                    sg.Column([[sg.Multiline(size=(40, 15),
+                                             key=_TRAINING_CONFIG,
+                                             no_scrollbar=True,
+                                             font=_SMALL)]]),
+                    sg.Push(),
+                    sg.Column([
+                        [sg.Text('Tipo',
+                                 font=_FONT)],
+                        [sg.Combo(['Classificação', 'Regressão'],
+                                  key=_TRAINING_TYPE,
+                                  font=_FONT,
+                                  size=(12, 1),
+                                  enable_events=True,
+                                  readonly=True)],
+                        [sg.VPush()],
+                        [sg.Text('Dataset',
+                                 font=_FONT)],
+                        [sg.Combo([],
+                                  key=_AVAILABLE_DATASETS,
+                                  font=_FONT,
+                                  size=(12, 1),
+                                  enable_events=True,
+                                  readonly=True)],
+                        [sg.VPush()],
+                    ],
+                       element_justification='c'),
+                    sg.Push()],
+                   [sg.VPush()],
+                   [sg.Button('Enviar',
+                              key=_SEND_BTN,
+                              font=_FONT)],
+                   [sg.VPush()]]
 
 # Aba treinamento (visualizar resultados)
 layout_results = [[sg.VPush()]]
@@ -236,6 +273,64 @@ def download_artifact():
                  custom_text="Ok")
 
 
+def fetch_datasets():
+    try:
+        data = artifacts.list_artifacts('dataset')
+        values = list(map(lambda d: d['objectId'],
+                          data))
+        window[_AVAILABLE_DATASETS].update(values=values)
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter lista de artefatos.",
+                 custom_text="Ok")
+
+
+def send_training(user: str):
+    training_type = window[_TRAINING_TYPE].get()
+    dataset = window[_AVAILABLE_DATASETS].get()
+    config = window[_TRAINING_CONFIG].get()
+
+    if len(training_type) <= 0 or \
+            len(dataset) <= 0 or \
+            len(config) <= 0:
+        sg.popup("Por favor, preencha todos os campos.",
+                 custom_text="Ok")
+        return
+
+    model_type = 'classifier' if training_type == 'Classificação' else 'regressor'
+
+    try:
+        config = json.loads(config)
+    except Exception:
+        sg.popup("Configuração de treinamento não é um JSON.",
+                 custom_text="Ok")
+        return
+
+    if not _is_valid_config(config):
+        sg.popup("Configuração de treinamento inválida.",
+                 custom_text="Ok")
+        return
+
+    try:
+        training.send_training(user,
+                               dataset,
+                               model_type,
+                               config)
+        _clear_training_fields()
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível enviar a requisição de treinamento.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
@@ -248,6 +343,42 @@ def _clear_download_fields():
     window[_ARTIFACT_DETAILS_DOWNLOAD].update('')
     window[_ARTIFACT_TYPE_DOWNLOAD].update('')
     window[_DOWNLOAD_DIRECTORY].update('')
+
+
+def _clear_training_fields():
+    window[_TRAINING_TYPE].update('')
+    window[_AVAILABLE_DATASETS].update('')
+    window[_TRAINING_CONFIG].update('')
+
+
+def _is_valid_config(data) -> bool:
+    if 'models' not in data:
+        return False
+    elif 'dataset' not in data:
+        return False
+
+    if len(data['models']) <= 0:
+        return False
+    else:
+        for m in data['models']:
+            if 'class' not in m or \
+                    'parameters' not in m:
+                return False
+
+    if 'features_columns' not in data['dataset']:
+        return False
+    elif 'target_column' not in data['dataset']:
+        return False
+    elif 'train' not in data['dataset'] or \
+            'test' not in data['dataset']:
+        return False
+    else:
+        if any(['start' not in data['dataset'][k] or
+                'end' not in data['dataset'][k]
+                for k in ['train', 'test']]):
+            return False
+
+    return True
 
 
 def start(*args, **kwargs):
@@ -269,6 +400,10 @@ def start(*args, **kwargs):
             update_artifact_metadata()
         elif event == _DOWNLOAD_BTN:
             download_artifact()
+        elif event == _TRAINING_TYPE:
+            fetch_datasets()
+        elif event == _SEND_BTN:
+            send_training(user)
 
     window.close()
 
