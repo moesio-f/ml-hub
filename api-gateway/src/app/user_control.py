@@ -22,21 +22,37 @@ def get(username: str):
     return jsonify(data), response.status_code
 
 
+def users():
+    response = requests.get(f'{_URL}/list')
+    data = {}
+
+    if response.status_code == 200:
+        data = response.json()
+
+    return jsonify(data), response.status_code
+
+
+def delete(username: str):
+    response = requests.delete(f'{_URL}/delete/{username}')
+
+    return jsonify({}), response.status_code
+
+
 def update(username: str,
            permissions: list[str]):
     user = requests.get(f'{_URL}/get/{username}').json()['user']
     response = requests.put(f'{_URL}/update/{username}',
-                             json={
-                                 "user": {
-                                     "username": username,
-                                     "password": user['password'],
-                                     "registrationDate": user['registrationDate'],
-                                     "type": user['type'],
-                                     "name": user['name'],
-                                     "notes": user['notes']
-                                 },
-                                 "permissions": permissions
-                             })
+                            json={
+                                "user": {
+                                    "username": username,
+                                    "password": user['password'],
+                                    "registrationDate": user['registrationDate'],
+                                    "type": user['type'],
+                                    "name": user['name'],
+                                    "notes": user['notes']
+                                },
+                                "permissions": permissions
+                            })
     logger.info(response.request.body)
     return jsonify({}), response.status_code
 
@@ -57,7 +73,7 @@ def create(username: str,
                                  },
                                  "permissions": permissions
                              })
-    
+
     data = {}
 
     if response.status_code == 200:

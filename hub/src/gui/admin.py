@@ -129,6 +129,35 @@ layout_iam = [[sg.VPush()],
                sg.Push()],
               [sg.VPush()]]
 
+# Aba de usuários
+_DELETE_BTN = '-DELETE-BTN-'
+_REFRESH_BTN = '-REFRESH-BTN-'
+_USER_TABLE = '-TABLE-USERS-'
+layout_users = [[sg.VPush()],
+                [sg.Push(),
+                 sg.Table(headings=['Usuário', 'Tipo', 'Selecionado'],
+                          values=[[]],
+                          justification='center',
+                          key=_USER_TABLE,
+                          auto_size_columns=False,
+                          max_col_width=12,
+                          def_col_width=12,
+                          num_rows=10,
+                          enable_click_events=True,
+                          font=_FONT),
+                 sg.Push()],
+                [sg.VPush()],
+                [sg.Push(),
+                 sg.Button('Atualizar',
+                           key=_REFRESH_BTN,
+                           font=_FONT),
+                 sg.Push(),
+                 sg.Button('Remover selecionados',
+                           key=_DELETE_BTN,
+                           font=_FONT),
+                 sg.Push()],
+                [sg.VPush()]]
+
 # Layout da janela
 layout = [[sg.TabGroup([[sg.Tab('Dashboard',
                                 layout_metrics,
@@ -136,7 +165,8 @@ layout = [[sg.TabGroup([[sg.Tab('Dashboard',
                                 expand_x=True,
                                 expand_y=True)],
                         [sg.Tab('Cadastro', layout_register)],
-                        [sg.Tab('IAM', layout_iam)]],
+                        [sg.Tab('IAM', layout_iam)],
+                        [sg.Tab('Usuários', layout_users)]],
                        size=(600, 400))]]
 
 window = sg.Window('ML Hub',
@@ -238,17 +268,58 @@ def update_user(username: str | None):
     _clear_update_fields()
 
 
+def refresh_users():
+    users = user_control.list_users()
+    table = window[_USER_TABLE]
+    values = [[d['username'], d['type'], '☐']
+              for d in users
+              if d['username'] != 'root']
+    table.update(values)
+
+
+def delete_user():
+    table = window[_USER_TABLE]
+    values = table.get()
+    user = [v[0] for v in values
+            if v[2] == '☑'][0]
+
+    try:
+        user_control.delete_user(username=user)
+    except Exception:
+        sg.popup("Não foi possível remover usuário, "
+                 "tente novamente.",
+                 custom_text="Ok")
+
+
 def selected_permission_row(table_key, row, column):
-    if column != 1:
+    if row is None or column is None:
         return
-    
+
+    if table_key not in [_PERMISSION_TABLE,
+                         _PERMISSION_TABLE_UPDATE,
+                         _USER_TABLE]:
+        return
+
     table = window[table_key]
     values = table.get()
 
-    current = values[row][column]
-    values[row][column] = '☐' if current == '☑' else '☑'
+    def _update():
+        current = values[row][column]
+        values[row][column] = '☐' if current == '☑' else '☑'
+        table.update(values=values)
 
-    table.update(values=values)
+    if table_key == _USER_TABLE:
+        if column != 2:
+            return
+        _update()
+        for i in range(len(values)):
+            if i != row:
+                values[i][2] = '☐'
+        table.update(values=values)
+    else:
+        if column != 1:
+            return
+        _update()
 
 
 def _clear_update_fields():
@@ -287,6 +358,11 @@ def start():
         elif event == _UPDATE_BTN:
             update_user(selected_user)
             selected_user = None
+        elif event == _REFRESH_BTN:
+            refresh_users()
+        elif event == _DELETE_BTN:
+            delete_user()
+            refresh_users()
         elif '+CLICKED+' in event:
             selected_permission_row(event[0],
                                     event[-1][0],

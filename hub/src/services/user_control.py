@@ -140,6 +140,28 @@ def create_user(username: str,
         raise ValueError()
 
 
+def list_users() -> list[dict]:
+    response = requests.get(f'{_URL}/user-control/list',
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    return response.json()
+
+
+def delete_user(username: str):
+    response = requests.delete(f'{_URL}/user-control/delete',
+                               json={
+                                   'username': username
+                               },
+                               headers={
+                                   'Authorization': f'Bearer {_JWT[0]}'
+                               })
+
+    if response.status_code != 200:
+        raise ValueError()
+
+
 def update_user(username: str,
                 permissions: list[str]):
     for i in range(len(permissions)):

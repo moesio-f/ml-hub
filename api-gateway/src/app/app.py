@@ -8,9 +8,8 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import jwt as pyjwt
-
 import iam
+import jwt as pyjwt
 import user_control
 from flask import Flask, jsonify, request
 
@@ -59,6 +58,21 @@ def get_user():
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
 
+@app.route('/user-control/list')
+def list_users():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    resp, code = _auth(jwt, endpoint='/user-control/list')
+
+    _METRICS['User Control']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return user_control.users()
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
 @app.route('/user-control/create', methods=['POST'])
 def create_user():
     jwt = request.headers.get('Authorization').split(" ")[-1]
@@ -76,7 +90,7 @@ def create_user():
                                    permissions=data['permissions'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
-    
+
 
 @app.route('/user-control/update', methods=['PUT'])
 def update_user():
@@ -91,6 +105,22 @@ def update_user():
     if _is_authorized(resp.get_json(), code):
         return user_control.update(username=data['username'],
                                    permissions=data['permissions'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/user-control/delete', methods=['DELETE'])
+def delte_user():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/user-control/delete')
+
+    _METRICS['User Control']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return user_control.delete(username=data['username'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
