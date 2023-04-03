@@ -56,9 +56,6 @@ VALUES ("/user-control/list",
         ("/training/model",
         "Obter o modelo treinado.",
         "training.model"),
-        ("/training/active",
-        "Lista todas as atividades de treinamento ativas.",
-        "training.list_active"),
-        ("/training/inactive",
-        "Lista todas as atividades de treinamento inativas.",
-        "training.list_inactive");
+        ("/training/list",
+        "Lista todas as atividades de treinamento.",
+        "training.list");

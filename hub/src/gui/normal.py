@@ -133,7 +133,26 @@ layout_training = [[sg.VPush()],
                    [sg.VPush()]]
 
 # Aba treinamento (visualizar resultados)
-layout_results = [[sg.VPush()]]
+_REFRESH_BTN = '-REFRESH-BTN-'
+_TASK_TABLE = '-TABLE-TASK-'
+layout_results = [[sg.VPush()],
+                  [sg.Push(),
+                   sg.Table(headings=['ID', 'Início'],
+                            values=[[]],
+                            justification='center',
+                            key=_TASK_TABLE,
+                            auto_size_columns=False,
+                            max_col_width=32,
+                            def_col_width=32,
+                            num_rows=10,
+                            enable_click_events=True,
+                            font=_SMALL),
+                   sg.Push()],
+                  [sg.VPush()],
+                  [sg.Button('Atualizar',
+                             key=_REFRESH_BTN,
+                             font=_FONT)],
+                  [sg.VPush()]]
 
 # Layout da janela
 layout = [[sg.TabGroup([[sg.Tab('Artefatos: download',
@@ -331,6 +350,24 @@ def send_training(user: str):
                  custom_text="Ok")
 
 
+def fetch_training_tasks(username: str):
+    try:
+        data = training.list()
+        values = [[v['task_id'], v['start_time']]
+                  for v in data
+                  if v['owner'] == username]
+        window[_TASK_TABLE].update(values=values)
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter a lista de atividades "
+                 "de treinamento.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
@@ -404,6 +441,8 @@ def start(*args, **kwargs):
             fetch_datasets()
         elif event == _SEND_BTN:
             send_training(user)
+        elif event == _REFRESH_BTN:
+            fetch_training_tasks(user)
 
     window.close()
 

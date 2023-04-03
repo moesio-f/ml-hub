@@ -298,8 +298,6 @@ def train():
         with temp_file.open('wb') as f:
             f.write(resp.data)
 
-        app.logger.info(resp.data)
-
         unzip = os.system(f'unzip {str(temp_file)} -d {str(temp_path)}')
 
         if unzip != 0:
@@ -317,6 +315,38 @@ def train():
                               owner=data['username'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/training/list')
+def train_list():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    resp, code = _auth(jwt, endpoint='/training/list')
+
+    _METRICS['Training']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return training.list()
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/training/status')
+def train_status():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/training/status')
+
+    _METRICS['Training']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return training.status(task_id=data['task_id'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
 
 
 @app.route('/metrics/')

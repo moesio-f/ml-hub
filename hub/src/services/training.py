@@ -32,3 +32,18 @@ def send_training(username: str,
             raise UserNotPermittedException()
 
         raise ValueError()
+
+
+def list():
+    response = requests.get(f'{_URL}/training/list',
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
+        if response.status_code == 401:
+            raise UserNotPermittedException()
+
+        raise ValueError()
+
+    return response.json()
