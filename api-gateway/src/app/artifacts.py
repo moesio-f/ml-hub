@@ -37,3 +37,14 @@ def list_artifact(artifact_type: str):
         data = response.json()
 
     return jsonify(data), response.status_code
+
+
+def artifact_metadata(artifact_id: str,
+                      artifact_type: str):
+    response = requests.get(f'{_URL}/metadata/{artifact_type}/{artifact_id}')
+    data = {}
+
+    if response.status_code == 200:
+        data = response.json()
+
+    return jsonify(data), response.status_code

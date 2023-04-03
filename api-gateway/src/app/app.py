@@ -140,12 +140,12 @@ def save_model():
                                        file=request.files['file'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
-    
 
-@app.route('/artifacts/model')
+
+@app.route('/artifacts/models')
 def list_models():
     jwt = request.headers.get('Authorization').split(" ")[-1]
-    resp, code = _auth(jwt, endpoint='/artifacts/save/model')
+    resp, code = _auth(jwt, endpoint='/artifacts/models')
 
     _METRICS['Artifacts']['total_requests'] += 1
     _METRICS['API Gateway']['total_requests'] += 1
@@ -153,6 +153,22 @@ def list_models():
 
     if _is_authorized(resp.get_json(), code):
         return artifacts.list_artifact('models')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/metadata/model')
+def metadata_model():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/artifacts/metadata/model')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.artifact_metadata(data['id'], 'model')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 

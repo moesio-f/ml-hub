@@ -39,7 +39,27 @@ def upload_artifact(artifact_path: Path,
 
 
 def list_artifacts(artifact_type: str):
-    response = requests.get(f'{_URL}/artifacts/{artifact_type}',
+    response = requests.get(f'{_URL}/artifacts/{artifact_type}s',
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
+        if response.status_code == 401:
+            raise UserNotPermittedException()
+
+        print(response)
+        raise ValueError()
+
+    return response.json()
+
+
+def artifact_metadata(artifact_id: str,
+                      artifact_type: str):
+    response = requests.get(f'{_URL}/artifacts/metadata/{artifact_type}',
+                            json={
+                                'id': artifact_id
+                            },
                             headers={
                                 'Authorization': f'Bearer {_JWT[0]}'
                             })

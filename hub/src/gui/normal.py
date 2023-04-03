@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -32,21 +33,23 @@ layout_artifacts_download = [[sg.VPush()],
                                             key=_ARTIFACT_NAME_DOWNLOAD,
                                             font=_FONT,
                                             size=(12, 1),
+                                            enable_events=True,
                                             readonly=True)],
                                   [sg.VPush()],
                                   [sg.Text('Salvar em',
                                            font=_FONT)],
-                                  [sg.Input(size=(12, 1),
-                                            font=_FONT),
-                                   sg.FileBrowse('Selecionar',
-                                                 font=_FONT)]
+                                  [sg.Input(size=(24, 1),
+                                            font=_SMALL),
+                                   sg.FolderBrowse('Selecionar',
+                                                   font=_FONT)]
                               ],
                                  element_justification='c'),
                               sg.Push(),
-                              sg.Column([[sg.Multiline(size=(40, 20),
+                              sg.Column([[sg.Multiline(size=(40, 10),
                                                        key=_ARTIFACT_DETAILS_DOWNLOAD,
                                                        no_scrollbar=True,
-                                                       disabled=True)]]),
+                                                       disabled=True,
+                                                       font=_FONT)]]),
                               sg.Push()],
                              [sg.VPush()],
                              [sg.Button('Download',
@@ -158,6 +161,9 @@ def upload_artifact(username: str):
 
 
 def update_artifacts():
+    window[_ARTIFACT_NAME_DOWNLOAD].update('', values=[])
+    window[_ARTIFACT_DETAILS_DOWNLOAD].update('')
+
     artifact_type = window[_ARTIFACT_TYPE_DOWNLOAD].get()
     artifact_type = 'model' if artifact_type == 'Modelo' else 'dataset'
 
@@ -176,6 +182,28 @@ def update_artifacts():
                  custom_text="Ok")
 
 
+def update_artifact_metadata():
+    window[_ARTIFACT_DETAILS_DOWNLOAD].update('')
+    artifact_type = window[_ARTIFACT_TYPE_DOWNLOAD].get()
+    artifact_type = 'model' if artifact_type == 'Modelo' else 'dataset'
+    artifact_name = window[_ARTIFACT_NAME_DOWNLOAD].get()
+
+    try:
+        data = artifacts.artifact_metadata(artifact_name,
+                                           artifact_type)
+        window[_ARTIFACT_DETAILS_DOWNLOAD].update(json.dumps(data,
+                                                             indent=4,
+                                                             ensure_ascii=False))
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter lista de modelos.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
@@ -183,9 +211,9 @@ def _clear_upload_fields():
 
 
 def _clear_download_fields():
-    window[_ARTIFACT_NAME_UPLOAD].update('')
-    window[_UPLOAD_FNAME].update('')
-    window[_ARTIFACT_TYPE_UPLOAD].update('')
+    window[_ARTIFACT_NAME_DOWNLOAD].update('')
+    window[_ARTIFACT_DETAILS_DOWNLOAD].update('')
+    window[_ARTIFACT_TYPE_DOWNLOAD].update('')
 
 
 def start(*args, **kwargs):
@@ -203,6 +231,8 @@ def start(*args, **kwargs):
             upload_artifact(user)
         elif event == _ARTIFACT_TYPE_DOWNLOAD:
             update_artifacts()
+        elif event == _ARTIFACT_NAME_DOWNLOAD:
+            update_artifact_metadata()
 
     window.close()
 
