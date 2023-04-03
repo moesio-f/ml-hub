@@ -15,6 +15,7 @@ _DOWNLOAD_BTN = '-DOWNLOAD-BTN-'
 _ARTIFACT_TYPE_DOWNLOAD = '-ARTIFACT-TYPE-DOWNLOAD-'
 _ARTIFACT_NAME_DOWNLOAD = '-ARTIFACT-NAME-DOWNLOAD-'
 _ARTIFACT_DETAILS_DOWNLOAD = '-ARTIFACT-DETAILS-DOWNLOAD-'
+_DOWNLOAD_DIRECTORY = '-DIRECTORY-DOWNLOAD-'
 layout_artifacts_download = [[sg.VPush()],
                              [sg.Push(),
                               sg.Column([
@@ -39,6 +40,7 @@ layout_artifacts_download = [[sg.VPush()],
                                   [sg.Text('Salvar em',
                                            font=_FONT)],
                                   [sg.Input(size=(24, 1),
+                                            key=_DOWNLOAD_DIRECTORY,
                                             font=_SMALL),
                                    sg.FolderBrowse('Selecionar',
                                                    font=_FONT)]
@@ -204,6 +206,36 @@ def update_artifact_metadata():
                  custom_text="Ok")
 
 
+def download_artifact():
+    artifact_type = window[_ARTIFACT_TYPE_DOWNLOAD].get()
+    artifact_id = window[_ARTIFACT_NAME_DOWNLOAD].get()
+    save_location = window[_DOWNLOAD_DIRECTORY].get()
+
+    if len(artifact_type) <= 0 or \
+            len(artifact_id) <= 0 or \
+            len(save_location) <= 0:
+        sg.popup("Por favor, preencha todos os campos.",
+                 custom_text="Ok")
+        return
+
+    artifact_type = 'model' if artifact_type == 'Modelo' else 'dataset'
+    save_location = Path(save_location).joinpath(f'{artifact_id}.zip')
+
+    try:
+        data = artifacts.download_artifact(artifact_id,
+                                           artifact_type,
+                                           save_location)
+        _clear_download_fields()
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter lista de modelos.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
@@ -212,8 +244,10 @@ def _clear_upload_fields():
 
 def _clear_download_fields():
     window[_ARTIFACT_NAME_DOWNLOAD].update('')
+    window[_ARTIFACT_NAME_DOWNLOAD].update(values=[])
     window[_ARTIFACT_DETAILS_DOWNLOAD].update('')
     window[_ARTIFACT_TYPE_DOWNLOAD].update('')
+    window[_DOWNLOAD_DIRECTORY].update('')
 
 
 def start(*args, **kwargs):
@@ -233,6 +267,8 @@ def start(*args, **kwargs):
             update_artifacts()
         elif event == _ARTIFACT_NAME_DOWNLOAD:
             update_artifact_metadata()
+        elif event == _DOWNLOAD_BTN:
+            download_artifact()
 
     window.close()
 

@@ -68,7 +68,27 @@ def artifact_metadata(artifact_id: str,
         if response.status_code == 401:
             raise UserNotPermittedException()
 
-        print(response)
         raise ValueError()
 
     return response.json()
+
+
+def download_artifact(artifact_id: str,
+                      artifact_type: str,
+                      save_path: Path):
+    response = requests.get(f'{_URL}/artifacts/download/{artifact_type}',
+                            json={
+                                'id': artifact_id
+                            },
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
+        if response.status_code == 401:
+            raise UserNotPermittedException()
+
+        raise ValueError()
+
+    with save_path.open('wb') as f:
+        f.write(response.content)

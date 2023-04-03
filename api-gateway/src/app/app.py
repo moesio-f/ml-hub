@@ -171,6 +171,22 @@ def metadata_model():
         return artifacts.artifact_metadata(data['id'], 'model')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/artifacts/download/model')
+def download_model():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/artifacts/download/model')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.download_artifact(data['id'], 'model')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
 
 @app.route('/metrics/')

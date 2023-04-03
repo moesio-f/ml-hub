@@ -2,7 +2,7 @@ import logging
 import os
 
 import requests
-from flask import jsonify
+from flask import jsonify, Response
 
 _URL = os.environ['ARTIFACTS_URL']
 
@@ -48,3 +48,18 @@ def artifact_metadata(artifact_id: str,
         data = response.json()
 
     return jsonify(data), response.status_code
+
+
+def download_artifact(artifact_id: str,
+                      artifact_type: str):
+    response = requests.get(f'{_URL}/download/{artifact_type}/{artifact_id}')
+    data = jsonify({})
+
+    if response.status_code == 200:
+        content = response.content
+        data = Response(content,
+                        mimetype='application/zip',
+                        headers={'Content-Disposition':
+                                 f'attachment;filename={artifact_id}.zip'})
+
+    return data, response.status_code
