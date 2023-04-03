@@ -47,3 +47,21 @@ def list():
         raise ValueError()
 
     return response.json()
+
+
+def status(task_id: str):
+    response = requests.get(f'{_URL}/training/status',
+                            json={
+                                'task_id': task_id
+                            },
+                            headers={
+                                'Authorization': f'Bearer {_JWT[0]}'
+                            })
+
+    if response.status_code != 200:
+        if response.status_code == 401:
+            raise UserNotPermittedException()
+
+        raise ValueError()
+
+    return response.json()

@@ -368,6 +368,33 @@ def fetch_training_tasks(username: str):
                  custom_text="Ok")
 
 
+def show_task_details(table_key, row):
+    if table_key != _TASK_TABLE:
+        return
+
+    table = window[table_key]
+    values = table.get()
+    task_id = values[row][0]
+
+    try:
+        data = training.status(task_id)
+        status = json.dumps(data,
+                            indent=4,
+                            ensure_ascii=False)
+        sg.popup(f"Resultado da task: {task_id}:\n\n"
+                          f"{status}",
+                          font=_FONT)
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter a lista de atividades "
+                 "de treinamento.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
@@ -443,6 +470,9 @@ def start(*args, **kwargs):
             send_training(user)
         elif event == _REFRESH_BTN:
             fetch_training_tasks(user)
+        elif '+CLICKED+' in event:
+            show_task_details(event[0],
+                              event[-1][0])
 
     window.close()
 
