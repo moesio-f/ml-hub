@@ -340,7 +340,7 @@ def _clear_create_fields():
     window[_ADMIN_CHECKBOX].update(False)
 
 
-def start():
+def start(*args, **kwargs):
     should_exit = False
     selected_user = None
 

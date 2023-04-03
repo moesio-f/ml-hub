@@ -9,3 +9,7 @@ class UserNotFoundException(Exception):
 
 class UserAlreadyExistsException(Exception):
     pass
+
+
+class UserNotPermittedException(Exception):
+    pass

@@ -1,16 +1,14 @@
 """Esse módulo contém a aplicação Flask.
 """
 
-import json
 import logging
-import os
 import time
-from datetime import datetime, timedelta
-from pathlib import Path
+import json
 
 import iam
 import jwt as pyjwt
 import user_control
+import artifacts
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -107,10 +105,10 @@ def update_user():
                                    permissions=data['permissions'])
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
-    
+
 
 @app.route('/user-control/delete', methods=['DELETE'])
-def delte_user():
+def delete_user():
     jwt = request.headers.get('Authorization').split(" ")[-1]
     data = request.get_json(force=True)
     resp, code = _auth(jwt, endpoint='/user-control/delete')
@@ -121,6 +119,41 @@ def delte_user():
 
     if _is_authorized(resp.get_json(), code):
         return user_control.delete(username=data['username'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/save/model', methods=['POST'])
+def save_model():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = json.loads(request.form['json'])
+    resp, code = _auth(jwt, endpoint='/artifacts/save/model')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.save_artifact(username=data['username'],
+                                       artifact_name=data['artifact_name'],
+                                       artifact_type='model',
+                                       file=request.files['file'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+    
+
+@app.route('/artifacts/artifacts/model')
+def save_model():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = json.loads(request.form['json'])
+    resp, code = _auth(jwt, endpoint='/artifacts/save/model')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.list_artifact('model')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 

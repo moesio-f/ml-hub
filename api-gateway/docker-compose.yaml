@@ -7,6 +7,8 @@ services:
     environment:
       - IAM_URL=http://host.docker.internal:5051/iam
       - USER_CONTROL_URL=http://host.docker.internal:5050/user-control
+      - ARTIFACTS_URL=http://host.docker.internal:5052/artifacts
+      - TRAINING_URL=http://host.docker.internal:5053/training
     ports:
       - 8080:8080
     restart: always

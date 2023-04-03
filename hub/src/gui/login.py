@@ -40,6 +40,7 @@ window = sg.Window('ML Hub', layout,
 
 def start() -> str:
     jwt = None
+    username = None
     should_exit = False
 
     while True:
@@ -52,7 +53,8 @@ def start() -> str:
             u, p = window[_USER_KEY].get(), window[_PASS_KEY].get()
             if len(u) > 0 and len(p) > 0:
                 try:
-                    jwt = login.authenticate(u, p)
+                    jwt, user_type = login.authenticate(u, p)
+                    username = u
                     break
                 except ValueError:
                     sg.popup("Não foi possível autenticar,"
@@ -68,4 +70,4 @@ def start() -> str:
     if should_exit:
         exit(0)
 
-    return jwt
+    return jwt, user_type, username
