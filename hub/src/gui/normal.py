@@ -23,6 +23,7 @@ layout_artifacts_download = [[sg.VPush()],
                                             key=_ARTIFACT_TYPE_DOWNLOAD,
                                             font=_FONT,
                                             size=(12, 1),
+                                            enable_events=True,
                                             readonly=True)],
                                   [sg.VPush()],
                                   [sg.Text('Artefato',
@@ -156,7 +157,32 @@ def upload_artifact(username: str):
                  custom_text="Ok")
 
 
+def update_artifacts():
+    artifact_type = window[_ARTIFACT_TYPE_DOWNLOAD].get()
+    artifact_type = 'model' if artifact_type == 'Modelo' else 'dataset'
+
+    try:
+        data = artifacts.list_artifacts(artifact_type)
+        values = list(map(lambda d: d['objectId'],
+                          data))
+        window[_ARTIFACT_NAME_DOWNLOAD].update(values=values)
+    except UserNotPermittedException:
+        sg.popup("Você não possui permissão para acessar "
+                 "esse serviço. Entre em contato com um "
+                 "administrador.",
+                 custom_text="Ok")
+    except Exception:
+        sg.popup("Não foi possível obter lista de modelos.",
+                 custom_text="Ok")
+
+
 def _clear_upload_fields():
+    window[_ARTIFACT_NAME_UPLOAD].update('')
+    window[_UPLOAD_FNAME].update('')
+    window[_ARTIFACT_TYPE_UPLOAD].update('')
+
+
+def _clear_download_fields():
     window[_ARTIFACT_NAME_UPLOAD].update('')
     window[_UPLOAD_FNAME].update('')
     window[_ARTIFACT_TYPE_UPLOAD].update('')
@@ -167,7 +193,7 @@ def start(*args, **kwargs):
     should_exit = False
 
     while True:
-        event, _ = window.read(timeout=1000)
+        event, _ = window.read()
 
         if event == sg.WINDOW_CLOSED:
             should_exit = True
@@ -175,6 +201,8 @@ def start(*args, **kwargs):
 
         if event == _UPLOAD_BTN:
             upload_artifact(user)
+        elif event == _ARTIFACT_TYPE_DOWNLOAD:
+            update_artifacts()
 
     window.close()
 

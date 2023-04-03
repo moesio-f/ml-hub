@@ -142,10 +142,9 @@ def save_model():
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
     
 
-@app.route('/artifacts/artifacts/model')
-def save_model():
+@app.route('/artifacts/model')
+def list_models():
     jwt = request.headers.get('Authorization').split(" ")[-1]
-    data = json.loads(request.form['json'])
     resp, code = _auth(jwt, endpoint='/artifacts/save/model')
 
     _METRICS['Artifacts']['total_requests'] += 1
@@ -153,7 +152,7 @@ def save_model():
     _METRICS['IAM Gateway']['total_requests'] += 1
 
     if _is_authorized(resp.get_json(), code):
-        return artifacts.list_artifact('model')
+        return artifacts.list_artifact('models')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 
