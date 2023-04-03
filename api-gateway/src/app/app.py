@@ -171,7 +171,7 @@ def metadata_model():
         return artifacts.artifact_metadata(data['id'], 'model')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
-    
+
 
 @app.route('/artifacts/download/model')
 def download_model():
@@ -185,6 +185,72 @@ def download_model():
 
     if _is_authorized(resp.get_json(), code):
         return artifacts.download_artifact(data['id'], 'model')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/save/dataset', methods=['POST'])
+def save_dataset():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = json.loads(request.form['json'])
+    resp, code = _auth(jwt, endpoint='/artifacts/save/dataset')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.save_artifact(username=data['username'],
+                                       artifact_name=data['artifact_name'],
+                                       artifact_type='dataset',
+                                       file=request.files['file'])
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/datasets')
+def list_datasets():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    resp, code = _auth(jwt, endpoint='/artifacts/datasets')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.list_artifact('datasets')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/metadata/dataset')
+def metadata_dataset():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/artifacts/metadata/dataset')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.artifact_metadata(data['id'], 'dataset')
+    else:
+        return jsonify({'msg': 'Usuário não autorizado.'}), 401
+
+
+@app.route('/artifacts/download/dataset')
+def download_dataset():
+    jwt = request.headers.get('Authorization').split(" ")[-1]
+    data = request.get_json(force=True)
+    resp, code = _auth(jwt, endpoint='/artifacts/download/dataset')
+
+    _METRICS['Artifacts']['total_requests'] += 1
+    _METRICS['API Gateway']['total_requests'] += 1
+    _METRICS['IAM Gateway']['total_requests'] += 1
+
+    if _is_authorized(resp.get_json(), code):
+        return artifacts.download_artifact(data['id'], 'dataset')
     else:
         return jsonify({'msg': 'Usuário não autorizado.'}), 401
 

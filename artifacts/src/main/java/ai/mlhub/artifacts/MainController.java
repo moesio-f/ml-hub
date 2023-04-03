@@ -104,7 +104,7 @@ public class MainController {
             return ResponseEntity.badRequest().body(Map.of("msg", "Dataset não encontrado."));
         }
 
-        Resource resource = new FileSystemResource(obj.getObjectPath());
+        Resource resource = new FileSystemResource(obj.getObjectPath().resolve("artifact.zip"));
 
         return ResponseEntity
                 .ok()

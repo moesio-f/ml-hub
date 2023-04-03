@@ -180,7 +180,7 @@ def update_artifacts():
                  "administrador.",
                  custom_text="Ok")
     except Exception:
-        sg.popup("Não foi possível obter lista de modelos.",
+        sg.popup("Não foi possível obter lista de artefatos.",
                  custom_text="Ok")
 
 
@@ -202,7 +202,7 @@ def update_artifact_metadata():
                  "administrador.",
                  custom_text="Ok")
     except Exception:
-        sg.popup("Não foi possível obter lista de modelos.",
+        sg.popup("Não foi possível obter metadados do artefato.",
                  custom_text="Ok")
 
 
@@ -222,9 +222,9 @@ def download_artifact():
     save_location = Path(save_location).joinpath(f'{artifact_id}.zip')
 
     try:
-        data = artifacts.download_artifact(artifact_id,
-                                           artifact_type,
-                                           save_location)
+        artifacts.download_artifact(artifact_id,
+                                    artifact_type,
+                                    save_location)
         _clear_download_fields()
     except UserNotPermittedException:
         sg.popup("Você não possui permissão para acessar "
@@ -232,7 +232,7 @@ def download_artifact():
                  "administrador.",
                  custom_text="Ok")
     except Exception:
-        sg.popup("Não foi possível obter lista de modelos.",
+        sg.popup("Não foi possível realizar download do artefato.",
                  custom_text="Ok")
 
 
