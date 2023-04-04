@@ -372,6 +372,9 @@ def show_task_details(table_key, row):
     if table_key != _TASK_TABLE:
         return
 
+    if row is None or row < 0:
+        return
+
     table = window[table_key]
     values = table.get()
     task_id = values[row][0]
